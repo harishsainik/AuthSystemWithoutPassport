@@ -16,14 +16,14 @@ app.use(session({
 }));
 
 app.get('/',isAuthenticated,(req,res) => {
-    console.log(`user: ${req.session.user.email}`);
+    console.log(`useremail: ${req.session.user.email} userNumber: ${req.session.user.phone}`);
     res.sendFile(path.join(__dirname, 'views', 'index.html'), (err) => {
         if(err){
             res.redirect('/error.html');
         }
     });
 });
-const usersRoutes = require('./routes/users');
+const usersRoutes = require('./routes/users/html/users');
 app.use('/user', usersRoutes);
 
 //Serve static files
