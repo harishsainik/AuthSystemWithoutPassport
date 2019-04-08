@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/harishsainik/AuthSystemWithoutPassport#readme",
   "dependencies": {
+    "bcrypt-nodejs": "0.0.3",
     "express": "^4.16.4",
     "express-session": "^1.15.6",
     "mysql": "^2.16.0"

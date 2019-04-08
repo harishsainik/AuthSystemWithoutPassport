@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const path = require('path');
 const mysql = require('mysql');
+const bcrypt = require('bcrypt-nodejs');
 const config = require('../config/config.json')["development"];
 
 router.get('/', (req,res) => {
@@ -65,20 +66,24 @@ router.post('/register', (req,res) => {
                 }else{
                     console.log("proceed to enter in db");
                     //TODO: Hash your password before storing in the db;
-        
-                    //query the database and process result.
-                    connection.query("insert into Persons set ?", person, (err, result) => {
-                        //Close your connection
-                        connection.end();
-                        if (err){
-                            return res.send(JSON.parse('{"status": "false", "msg": "An error occured."}'));
-                        }else{
-                            if (result.affectedRows == 1){
-                                console.log("Data Inserted successfully");
-                                return res.send(JSON.parse('{"status": "true", "msg": "Successfully Registered"}'));
-                            }else
-                                return res.send(JSON.parse('{"status": "false", "msg": "An error occured."}'));
-                        }
+                    bcrypt.genSalt(10, (err, salt) => {
+                        bcrypt.hash(password, salt,null,(err, hashPassword) => {
+                            person.password = hashPassword;
+                            //query the database and process result.
+                            connection.query("insert into Persons set ?", person, (err, result) => {
+                                //Close your connection
+                                connection.end();
+                                if (err){
+                                    return res.send(JSON.parse('{"status": "false", "msg": "An error occured."}'));
+                                }else{
+                                    if (result.affectedRows == 1){
+                                        console.log("Data Inserted successfully");
+                                        return res.send(JSON.parse('{"status": "true", "msg": "Successfully Registered"}'));
+                                    }else
+                                        return res.send(JSON.parse('{"status": "false", "msg": "An error occured."}'));
+                                }
+                            });
+                        });
                     });
                 }
             }
@@ -111,16 +116,15 @@ router.post('/login', (req,res) => {
                 if (result.length == 1){
                     console.log(result);
                     console.log("Check password");
-                    //TODO: Hash your password before storing in the db;
-        
-                    //Match passwords
                     var user = result[0];
                     if(user){
-                        if(user.password == password){
-                            return res.send(JSON.parse('{"status": "true", "msg": "successfully Logged in."}'));
-                        }else{
-                            return res.send(JSON.parse('{"status": "false", "msg": "Wrong Password."}'));
-                        }
+                        bcrypt.compare(password, user.password, (err, isMatched) => {
+                            if(isMatched){
+                                return res.send(JSON.parse('{"status": "true", "msg": "successfully Logged in."}'));
+                            }else{
+                                return res.send(JSON.parse('{"status": "false", "msg": "Wrong Password."}'));
+                            }
+                        });
                     }else{
                         return res.send(JSON.parse('{"status": "false", "msg": "An error occured."}'));
                     } 
