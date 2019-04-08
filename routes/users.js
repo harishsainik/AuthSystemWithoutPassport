@@ -5,15 +5,11 @@ const mysql = require('mysql');
 const bcrypt = require('bcrypt-nodejs');
 const config = require('../config/config.json')["development"];
 
-router.get('/', (req,res) => {
-    res.sendFile(path.join(path.dirname(__dirname), 'views', 'index.html'), (err) => {
-        if(err){
-            res.redirect('/error.html');
-        }
-    });
-});
+const isAuthenticated = require('../middleware/isAuthenticated');
+const isAlreadyLoggedin = require('../middleware/isAlreadyLoggedin');
+
 //TODO:If already logged in, redirect the user
-router.get('/login', (req,res) => {
+router.get('/login',isAlreadyLoggedin, (req,res) => {
     res.sendFile(path.join(path.dirname(__dirname), 'views', 'login.html'), (err) => {
         if(err){
             res.redirect('/error.html');
@@ -21,11 +17,18 @@ router.get('/login', (req,res) => {
     });
 });
 
-router.get('/register', (req,res) => {
+router.get('/register',isAlreadyLoggedin, (req,res) => {
     res.sendFile(path.join(path.dirname(__dirname), 'views', 'register.html'), (err) => {
         if(err){
             res.redirect('/error.html');
         }
+    });
+});
+
+router.get('/logout',isAuthenticated, (req,res) => {
+    req.session.destroy(function(err) {
+        console.log('session has been destroyed');
+        res.send("<h1>You have successfully logged out.</h1>")
     });
 });
 
@@ -120,6 +123,8 @@ router.post('/login', (req,res) => {
                     if(user){
                         bcrypt.compare(password, user.password, (err, isMatched) => {
                             if(isMatched){
+                                //Set user in session
+                                req.session.user = user;
                                 return res.send(JSON.parse('{"status": "true", "msg": "successfully Logged in."}'));
                             }else{
                                 return res.send(JSON.parse('{"status": "false", "msg": "Wrong Password."}'));
