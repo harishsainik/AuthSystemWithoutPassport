@@ -3,14 +3,26 @@ const session = require('express-session');
 const path = require('path');
 let isAuthenticated = require('./middleware/isAuthenticated');
 const app = express();
+const MySQLStore = require('express-mysql-session')(session);
 
 //Use body parser of express
 app.use(express.urlencoded({extended: false}));
 
+//const config = require('./config/config.json')["development"];
+const config = {
+    "host": "localhost",
+    "user": "root",
+    "password": "root",
+    "database" : "Test"
+}
+
+const sessionStore = new MySQLStore(config);
 //session set up
 app.use(session({
     secret: 'My Super Secret',
     resave: false,
+    maxAge: 60000,
+    store: sessionStore,
     saveUninitialized: false,
     cookie: {maxAge: 60000}
 }));
